@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui.dialog_select_machines import DialogSelectMachines
+from gui.dialogs.dialog_select_machines import DialogSelectMachines
 
 
 class CarAssemblyAdvisorApp(tk.Frame):

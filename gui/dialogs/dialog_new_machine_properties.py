@@ -1,22 +1,11 @@
 import tkinter as tk
-from dataclasses import dataclass
 
 import tkinter_extension.entry as entry
 import tkinter_extension.widget_list as widget_list
 from tkinter_extension.tk_context import TkContext
 
-
-@dataclass
-class PartRate:
-    name: str
-    rate: float
-
-
-@dataclass
-class MachineProperties:
-    name: str
-    cost: float
-    produced_parts: list[PartRate]
+from types.machine_properties import MachineProperties
+from types.part_rate import PartRate
 
 
 class DialogNewMachine(tk.Frame):

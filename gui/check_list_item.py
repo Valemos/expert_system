@@ -13,4 +13,4 @@ class CheckListItem(tk.Frame):
 
     @property
     def checked(self):
-        return self._state == 1
+        return self._state.get() == 1
