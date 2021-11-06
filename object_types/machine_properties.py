@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from types.part_rate import PartRate
+from object_types.part_rate import PartRateList
 from json_automatic.a_composite_json_serializable import ACompositeJsonSerializable
 
 
@@ -8,4 +8,4 @@ from json_automatic.a_composite_json_serializable import ACompositeJsonSerializa
 class MachineProperties(ACompositeJsonSerializable):
     name: str
     cost: float
-    produced_parts: list[PartRate]
+    produced_parts: PartRateList
