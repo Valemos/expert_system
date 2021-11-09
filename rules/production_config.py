@@ -6,14 +6,14 @@ def map_to_dict(*ls, **kw):
     return {e[kw['key']]: e for e in ls}
 
 
-schemes = {
+blueprints = {
     'car': {'wheel': 4, 'hull': 1, 'engine': 1},
     'wheel': {'aluminum': 2, 'rubber': 1},
     'hull': {'steel': 10},
     'engine': {'steel': 3, 'aluminum': 1}
 }
 
-machines = map_to_dict(
+machine_brands = map_to_dict(
     MachineProperties(
         'Tormach',
         200,
@@ -45,7 +45,7 @@ machines = map_to_dict(
     key='brand'
 )
 
-machine_types = list(machines.keys())
+machine_types = list(machine_brands.keys())
 
 market_prices = {
     'rubber': 1,

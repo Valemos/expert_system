@@ -1,5 +1,8 @@
 from durable.lang import *
-from . import production_scheme
+
+from object_types.part_rate import PartRate
+from . import production_config
+from .shared import get_storage, add_part_brand_mapping
 
 
 with ruleset('machine'):
@@ -9,29 +12,18 @@ with ruleset('machine'):
         print(f'added machine brand: {c.m.brand} with cost {c.m.cost}u that can produce {c.m.produced_parts}')
 
         for part_rate in c.m.produced_parts:
-            assert_fact('machine', {'can_produce': part_rate['name'], 'machine': c.m.brand, 'rate': part_rate['rate']})
+            assert_fact('machine', {'brand': c.m.brand, 'can_produce': part_rate})
 
     @when_all(+m.identifier)
     def assign_machine(c):
         print(f'added new machine: {c.m.identifier} ({c.m.brand}) that produces {c.m.part_rate}')
 
+        blueprint = production_config.blueprints.get(c.m.part_rate.name, None)
+        if blueprint is None:
+            raise ValueError('no blueprint for produced object')
 
-def get_next_machine_id():
-    state = get_state('machine')
-    cur_id = state.get('last_machine_id', 0)
-    next_id = cur_id + 1
+        get_storage().add(c.m.part_rate)
 
-    state['last_machine_id'] = next_id
-    update_state('machine', state)
-
-    return next_id
-
-
-def get_machines_for_part(part_name):
-    _result_info = []
-    for _fact in get_facts('machine'):
-        if 'can_produce' in _fact:
-            if _fact['can_produce'] == part_name:
-                _result_info.append(production_scheme.machines[_fact['machine']])
-
-    return _result_info
+    @when_all(+m.can_produce & +m.brand)
+    def add_can_produce(c):
+        add_part_brand_mapping(c.m.can_produce.name, c.m.brand)

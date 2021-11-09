@@ -1,9 +1,13 @@
 from durable.lang import *
 
-from object_types.amounts_dict import AmountsDict
 from object_types.part_rate import PartRate
-from . import production_scheme
-from .machine import get_machines_for_part, get_next_machine_id
+from . import production_config
+from .shared import get_machines_for_part, get_next_machine_id, get_storage
+
+
+def init_account():
+    update_state('production', {'balance': 0})
+
 
 with ruleset('production'):
 
@@ -20,68 +24,59 @@ with ruleset('production'):
     def machine_remove(c):
         machine_info = None
         for fact in get_facts('machine'):
-            if 'name' in fact:
-                if c.m.identifier == fact['name']:
+            if 'identifier' in fact:
+                if c.m.identifier == fact['identifier']:
                     machine_info = fact
                     break
 
         if machine_info is not None:
+            produced_name = machine_info['part_rate']['name']
+            for component, amount in production_config.blueprints[produced_name].items():
+                get_storage().add(PartRate(component, amount))
+
             retract_fact('machine', machine_info)
+            brand = machine_info['brand']
             post('production', {
-                'loss': machine_info['cost']
+                'loss': production_config.machine_brands[brand]['cost']
             })
-            post('production', {
+            post('decision', {
                 'type': 'replace_machine',
-                'part_rates': machine_info['produced_parts']
+                'part_rate': machine_info['part_rate']
             })
 
-    @when_all(+m.part_rate & (m.type == 'deficiency') & (m.part_rate.amount > 0))
-    def handle_deficiencies(c):
-        available = get_available_parts()
+    @when_all(+m.part_rate & (m.type == 'part_request'))
+    def part_request(c):
+        in_storage_amount = get_storage()[c.m.part_rate.name]
 
-        post('decision', {'type': 'deficiency', 'part_rate': c.m.part_rate})
+        get_storage().take(c.m.part_rate)
+
+        if in_storage_amount < c.m.part_rate.amount:
+            additional_amount = in_storage_amount - c.m.part_rate.amount
+            additional_rate = PartRate(c.m.part_rate.name, additional_amount).to_json()
+            post('decision', {'type': 'deficiency', 'part_rate': additional_rate})
+
 
     @when_all(+m.part_rate & (m.type == 'buy'))
     def buy_part(c):
-        parts_cost = production_scheme.market_prices[c.m.part_rate.identifier] * c.m.part_rate.amount
+        parts_cost = production_config.market_prices[c.m.part_rate.name] * c.m.part_rate.amount
         if parts_cost > c.s.balance:
             raise ValueError(f'cannot buy {c.m.part_rate}')
 
-        state = get_state('production')
-        current_amount = state['parts_storage'].get(c.m.part_rate.identifier, 0)
-        state['parts_storage'][c.m.part_rate.identifier] = current_amount + c.m.part_rate.amount
-        update_state('production', state)
-
+        get_storage().add(c.m.part_rate)
         post('production', {'loss': parts_cost})
 
-    @when_all(+m.part_rate & (m.type == 'target_produce'))
+    @when_all(+m.part_rate & (m.type == 'setup_produce'))
     def add_component_production(c):
-        components = production_scheme.schemes[c.m.part_rate.identifier]
+        components = production_config.blueprints[c.m.part_rate.name]
         components = {name: (amount * c.m.part_rate.amount) for name, amount in components.items()}
 
-        machine = get_machines_for_part(c.m.part_rate.identifier)[0]
-
         for name, amount in components.items():
-            post('production', {'type': 'deficiency', 'part_rate': PartRate(name, amount).to_json()})
+            post('production', {'type': 'part_request', 'part_rate': PartRate(name, amount).to_json()})
+
+        machine = get_machines_for_part(c.m.part_rate.name)[0]
 
         assert_fact('machine', {
             'identifier': get_next_machine_id(),
             'brand': machine['brand'],
-            'part_rate': c.m.part_rate,
+            'part_rate': PartRate(c.m.part_rate.name, c.m.part_rate.amount).to_json(),
         })
-
-
-def init_account():
-    update_state('production', {'balance': 0, 'parts_storage': {}})
-
-
-def get_available_parts():
-    _parts = AmountsDict()
-    for _part in get_state('production')['parts_storage'].items():
-        _parts.add(*_part)
-
-    for _fact in get_facts('machine'):
-        if 'can_produce' in _fact:
-            _parts.add(_fact['can_produce'], _fact['amount'])
-
-    return _parts
