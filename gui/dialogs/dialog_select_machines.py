@@ -9,6 +9,7 @@ class DialogSelectMachines(tk.Frame):
         tk.Frame.__init__(self, root, **kw)
         self.root = root
         self._submitted = False
+        self.configure(padx=10, pady=10)
 
         self.machines_list = CheckList(root)
         self.machines_list.set_objects(machines_names)
