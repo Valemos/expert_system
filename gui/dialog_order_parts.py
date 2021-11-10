@@ -4,7 +4,6 @@ from tkinter_extension.widget_list import DynamicWidgetList
 
 from gui.dialogs.a_dialog import ADialog
 from gui.entry_menu_amount import EntryMenuAmount
-from gui.name_amount_entry_list import NameAmountEntryList
 from object_types.part_rate import PartRate
 
 

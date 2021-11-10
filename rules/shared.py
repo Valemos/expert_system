@@ -1,3 +1,4 @@
+from gui.decision_collection import DecisionCollection
 from object_types.part_storage import PartStorage
 from . import production_config
 
@@ -8,6 +9,14 @@ _global_storage = PartStorage()
 def get_storage() -> PartStorage:
     global _global_storage
     return _global_storage
+
+
+_global_decisions = DecisionCollection()
+
+
+def get_decisions() -> DecisionCollection:
+    global _global_decisions
+    return _global_decisions
 
 
 _global_part_to_machine_mapping = {}

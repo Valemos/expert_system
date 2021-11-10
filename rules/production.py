@@ -2,7 +2,7 @@ from durable.lang import *
 
 from object_types.part_rate import PartRate
 from . import production_config
-from .shared import get_machines_for_part, get_next_machine_id, get_storage
+from .shared import get_machines_for_part, get_next_machine_id, get_storage, get_decisions
 
 
 def init_account():
@@ -13,7 +13,7 @@ with ruleset('production'):
 
     @when_all(+m.loss)
     def try_compensate_loss(c):
-        assert_fact('decision', {'type': 'compensate_loss', 'amount': c.m.loss})
+        get_decisions().compensate_loss(c.m.loss)
         c.s.balance -= c.m.loss
 
     @when_all(+m.income)
@@ -39,10 +39,7 @@ with ruleset('production'):
             post('production', {
                 'loss': production_config.machine_brands_dict[brand]['cost']
             })
-            post('decision', {
-                'type': 'production_stopped',
-                'part_rate': machine_info['part_rate']
-            })
+            get_decisions().production_stopped(machine_info['part_rate'])
 
     @when_all(+m.part_rate & (m.type == 'part_request'))
     def part_request(c):
@@ -53,7 +50,7 @@ with ruleset('production'):
         if in_storage_amount < c.m.part_rate.amount:
             additional_amount = in_storage_amount - c.m.part_rate.amount
             additional_rate = PartRate(c.m.part_rate.name, additional_amount).to_json()
-            post('decision', {'type': 'deficiency', 'part_rate': additional_rate})
+            get_decisions().deficiency(additional_rate)
 
 
     @when_all(+m.part_rate & (m.type == 'buy'))

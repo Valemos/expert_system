@@ -8,12 +8,13 @@ from durable.lang import *
 from json_annotated.raw_json import RawJson
 
 import rules
+from rules.shared import get_decisions
+from object_types.assigned_machine import AssignedMachine
+
 from gui.ApplicationState import ApplicationState
 from gui.dialog_install_machine import DialogInstallMachine
-
 from gui.dialog_order_parts import DialogOrderParts
 from gui.dialogs.dialog_select_machines import DialogSelectMachines
-from object_types.assigned_machine import AssignedMachine
 
 
 class CarAssemblyAdvisorApp(tk.Frame):
@@ -28,8 +29,10 @@ class CarAssemblyAdvisorApp(tk.Frame):
 
         tk.Button(root, text="Show status", command=self.handle_show_status).pack(side=tk.TOP, anchor=tk.CENTER)
         tk.Button(root, text="Install machine", command=self.handle_install_machine).pack(side=tk.TOP, anchor=tk.CENTER)
-        tk.Button(root, text="Machine Broke", command=self.handle_machine_broke).pack(side=tk.TOP, anchor=tk.CENTER)
+        tk.Button(root, text="Machine broke", command=self.handle_machine_broke).pack(side=tk.TOP, anchor=tk.CENTER)
         tk.Button(root, text="Order parts", command=self.handle_order_parts).pack(side=tk.TOP, anchor=tk.CENTER)
+        tk.Button(root, text="Conclude decisions", command=self.handle_conclude).pack(side=tk.TOP, anchor=tk.CENTER)
+        tk.Button(root, text="Get advice", command=self.handle_get_advice).pack(side=tk.TOP, anchor=tk.CENTER)
         tk.Button(root, text="Save state", command=self.save_state).pack(side=tk.TOP, anchor=tk.CENTER)
 
         self.init_state()
@@ -53,6 +56,14 @@ class CarAssemblyAdvisorApp(tk.Frame):
                 json.dump(state.to_json(), fin)
         except Exception:
             os.remove(self.state_file_path)
+
+    @staticmethod
+    def handle_conclude():
+        get_decisions().make_final_decisions()
+
+    def handle_get_advice(self):
+        # todo finish
+        pass
 
     def handle_show_status(self):
         machines = self._get_installed_machines()
@@ -88,7 +99,7 @@ class CarAssemblyAdvisorApp(tk.Frame):
     def handle_order_parts(self):
         produced_parts = list(rules.production_config.blueprints.keys())
         raw_materials = rules.production_config.raw_materials
-        
+
         dialog = DialogOrderParts(tk.Toplevel(self), produced_parts + raw_materials)
 
         part_rates = dialog.get_results()
