@@ -20,7 +20,7 @@ with ruleset('production'):
     def add_income(c):
         c.s.balance += c.m.income
 
-    @when_all(+m.identifier & (m.type == 'machine_break'))
+    @when_all(+m.identifier & (m.type == 'machine_loss'))
     def machine_remove(c):
         machine_info = None
         for fact in get_facts('machine'):
@@ -40,7 +40,7 @@ with ruleset('production'):
                 'loss': production_config.machine_brands[brand]['cost']
             })
             post('decision', {
-                'type': 'replace_machine',
+                'type': 'production_stopped',
                 'part_rate': machine_info['part_rate']
             })
 

@@ -57,7 +57,7 @@ def test_machine_removed_on_break(init_facts):
     machines = [fact for fact in get_facts('machine') if 'identifier' in fact]
     assert builtins.all(machine in machines for machine in start_machines)
 
-    post('production', {'type': 'machine_break', 'identifier': 1})
+    post('production', {'type': 'machine_loss', 'identifier': 1})
 
     assert start_machines[0] not in get_facts('machine')
     assert start_machines[1] in get_facts('machine')
