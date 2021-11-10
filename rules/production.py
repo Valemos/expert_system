@@ -30,15 +30,15 @@ with ruleset('production'):
                     break
 
         if machine_info is not None:
-            produced_name = machine_info['part_rate']['name']
-            for component, amount in production_config.blueprints[produced_name].items():
+            produced_part_name = machine_info['part_rate']['name']
+            get_storage().take(machine_info['part_rate'])
+            for component, amount in production_config.blueprints[produced_part_name].items():
                 get_storage().add(PartRate(component, amount))
 
             retract_fact('machine', machine_info)
-            brand = machine_info['brand']
-            post('production', {
-                'loss': production_config.machine_brands_dict[brand]['cost']
-            })
+            cost = production_config.machine_brands_dict[machine_info['brand']]['cost']
+
+            get_decisions().compensate_loss(cost)
             get_decisions().production_stopped(machine_info['part_rate'])
 
     @when_all(+m.part_rate & (m.type == 'part_request'))

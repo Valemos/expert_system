@@ -3,11 +3,14 @@ import os
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
+from typing import Optional
 
 from durable.lang import *
 from json_annotated.raw_json import RawJson
 
 import rules
+from gui.dialog_decide_loss import DialogDecideLoss
+from object_types.decision_type import DecisionType
 from rules.shared import get_decisions
 from object_types.assigned_machine import AssignedMachine
 
@@ -26,6 +29,8 @@ class CarAssemblyAdvisorApp(tk.Frame):
         self.root = root
         self.winfo_toplevel().title("Assembly Advisor")
         self.root.configure(padx=10, pady=10)
+
+        self.actions = []
 
         tk.Button(root, text="Show status", command=self.handle_show_status).pack(side=tk.TOP, anchor=tk.CENTER)
         tk.Button(root, text="Install machine", command=self.handle_install_machine).pack(side=tk.TOP, anchor=tk.CENTER)
@@ -57,13 +62,20 @@ class CarAssemblyAdvisorApp(tk.Frame):
         except Exception:
             os.remove(self.state_file_path)
 
-    @staticmethod
-    def handle_conclude():
-        get_decisions().make_final_decisions()
+    def handle_conclude(self):
+        for decision, obj in get_decisions().get_remaining_decisions():
+            if decision == DecisionType.LOSS:
+                self.add_action(DialogDecideLoss(tk.Toplevel(self.root), obj).get_results())
+
+        if not get_decisions().is_empty():
+            self.handle_conclude()
+
+    def add_action(self, action: Optional[object]):
+        if action is not None:
+            self.actions.append(action)
 
     def handle_get_advice(self):
-        # todo finish
-        pass
+        messagebox.showinfo('Advice', '\n'.join(action for action in self.actions))
 
     def handle_show_status(self):
         machines = self._get_installed_machines()

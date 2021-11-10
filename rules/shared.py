@@ -1,4 +1,4 @@
-from gui.decision_collection import DecisionCollection
+from object_types.decision_collection import DecisionCollection
 from object_types.part_storage import PartStorage
 from . import production_config
 
