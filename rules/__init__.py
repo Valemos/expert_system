@@ -4,6 +4,6 @@ from .machine import *
 from .decision import *
 
 
-for name, machine_info in production_config.machine_brands.items():
+for machine_info in production_config.machine_brands_dict.values():
     assert_fact('machine', machine_info)
 

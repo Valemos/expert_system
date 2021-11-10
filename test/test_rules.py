@@ -6,7 +6,7 @@ from durable.lang import *
 
 import rules
 from object_types.amounts_dict import AmountsDict
-from object_types.machine_properties import AssignedMachine
+from object_types.assigned_machine import AssignedMachine
 from object_types.part_rate import PartRate
 from rules import production_config, get_next_machine_id
 from rules.production_config import machine_types
@@ -43,7 +43,7 @@ def init_facts(init, start_machines, basic_resources):
     retract_facts('production', get_facts('production'))
     rules.get_storage().clear()
 
-    assert_facts('machine', list(rules.production_config.machine_brands.values()))
+    assert_facts('machine', list(rules.production_config.machine_brands_dict.values()))
     assert_facts('machine', start_machines)
 
     for resource in basic_resources.items():

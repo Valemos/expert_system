@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from object_types.amounts_dict import AmountsDict
 from object_types.part_rate import PartRate
 
@@ -25,6 +27,10 @@ class PartStorage:
     @property
     def parts(self):
         return self._parts
+
+    @property
+    def iter_part_rates(self) -> Iterator[PartRate]:
+        return (PartRate(part, amount) for part, amount in self._parts)
 
     @part_rate_conversion
     def add(self, part_rate: PartRate):

@@ -37,7 +37,7 @@ with ruleset('production'):
             retract_fact('machine', machine_info)
             brand = machine_info['brand']
             post('production', {
-                'loss': production_config.machine_brands[brand]['cost']
+                'loss': production_config.machine_brands_dict[brand]['cost']
             })
             post('decision', {
                 'type': 'production_stopped',

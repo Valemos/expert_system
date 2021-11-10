@@ -16,7 +16,7 @@ _global_part_to_machine_mapping = {}
 def get_machines_for_part(part_name):
     global _global_part_to_machine_mapping
     _brand_names = _global_part_to_machine_mapping[part_name]
-    return [production_config.machine_brands[brand] for brand in _brand_names]
+    return [production_config.machine_brands_dict[brand] for brand in _brand_names]
 
 
 def add_part_brand_mapping(part_name, brand):

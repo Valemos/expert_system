@@ -1,39 +1,26 @@
 import tkinter as tk
 
 from gui.check_list import CheckList
+from gui.dialogs.a_dialog import ADialog
+from object_types.assigned_machine import AssignedMachine
 
 
-class DialogSelectMachines(tk.Frame):
+class DialogSelectMachines(ADialog):
 
-    def __init__(self, root, machines_names, **kw):
-        tk.Frame.__init__(self, root, **kw)
-        self.root = root
-        self._submitted = False
-        self.configure(padx=10, pady=10)
+    def __init__(self, root, machines: list[AssignedMachine], **kw):
+        super().__init__(root, **kw)
 
         self.machines_list = CheckList(root)
-        self.machines_list.set_objects(machines_names)
+        self.machines_list.set_objects(machines)
+        self.pack_dialog()
 
-        self.frame_submit = tk.Frame(root)
-        self.button_submit = tk.Button(self.frame_submit, text="Submit", command=self.handle_submit)
-        self.button_cancel = tk.Button(self.frame_submit, text="Cancel", command=self.handle_cancel)
-        self.button_submit.pack(side=tk.LEFT)
-        self.button_cancel.pack(side=tk.RIGHT)
-
+    def pack_elements(self):
         self.machines_list.pack(side=tk.TOP)
         self.frame_submit.pack(side=tk.TOP)
 
-    def handle_submit(self):
-        self._submitted = True
-        self.root.destroy()
+    def get_dialog_fields(self):
+        return self.machines_list.get_checked_objects()
 
-    def handle_cancel(self):
-        self._submitted = False
-        self.root.destroy()
+    def get_results(self) -> list[AssignedMachine]:
+        return super().get_results()
 
-    def get_selected(self):
-        self.wait_window()
-        if self._submitted:
-            return self.machines_list.get_checked_objects()
-        else:
-            return []

@@ -10,10 +10,3 @@ class MachineProperties(ACompositeJsonSerializable):
     cost: float
     produced_parts: list[PartRate]
     needs_staff: bool
-
-
-@dataclass
-class AssignedMachine(ACompositeJsonSerializable):
-    identifier: int
-    brand: str
-    part_rate: PartRate

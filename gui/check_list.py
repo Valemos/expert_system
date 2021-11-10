@@ -12,7 +12,7 @@ class CheckList(FixedWidgetList):
         super().__init__(root, **kw)
         self.options = {}
 
-    def pack_object_to_item(self, wrapper: ListItemWidget, obj):
+    def create_object_widget(self, wrapper: ListItemWidget, obj):
         label = str(obj)
         self.options[label] = obj
 

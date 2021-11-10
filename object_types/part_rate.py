@@ -5,5 +5,8 @@ from json_annotated.a_composite_json_serializable import ACompositeJsonSerializa
 
 @dataclass
 class PartRate(ACompositeJsonSerializable):
-    name: str
-    amount: float
+    name: str = ''
+    amount: float = 0
+
+    def __str__(self):
+        return f'{self.name} x {self.amount}'

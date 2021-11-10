@@ -13,7 +13,8 @@ blueprints = {
     'engine': {'steel': 3, 'aluminum': 1}
 }
 
-machine_brands = map_to_dict(
+
+machine_brands = [
     MachineProperties(
         'Tormach',
         200,
@@ -22,7 +23,7 @@ machine_brands = map_to_dict(
             PartRate('hull', 1),
         ],
         True
-    ).to_json(),
+    ),
     MachineProperties(
         'Powermatic',
         400,
@@ -31,7 +32,7 @@ machine_brands = map_to_dict(
             PartRate('engine', 10),
         ],
         False
-    ).to_json(),
+    ),
     MachineProperties(
         'Industrial robot',
         700,
@@ -41,11 +42,18 @@ machine_brands = map_to_dict(
             PartRate('hull', 1),
         ],
         False
-    ).to_json(),
+    )
+]
+
+
+machine_brands_dict = map_to_dict(
+    *[m.to_json() for m in machine_brands],
     key='brand'
 )
 
-machine_types = list(machine_brands.keys())
+
+machine_types = list(machine_brands_dict.keys())
+
 
 market_prices = {
     'rubber': 1,
@@ -55,3 +63,6 @@ market_prices = {
     'hull': 50,
     'engine': 40,
 }
+
+
+raw_materials = [material for material in market_prices.keys() if material not in blueprints]
