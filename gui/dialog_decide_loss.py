@@ -1,5 +1,6 @@
 from tkinter_extension.entry import EntryFloatWithLabel
 
+from durable.lang import *
 from gui.dialogs.a_dialog import tk, ADialog
 
 
@@ -9,18 +10,22 @@ class DialogDecideLoss(ADialog):
         super().__init__(root, **kw)
         self.loss = amount
 
-        self.entry_can_add_money = EntryFloatWithLabel(root, "Can add money", 20, 0)
+        self.entry_additional_money = EntryFloatWithLabel(root, "Can add money", 20, 0)
+        self.pack_dialog()
 
     def pack_elements(self):
         tk.Label(self.root, text="You have unmet losses").pack(side=tk.TOP)
-        self.entry_can_add_money.pack(side=tk.TOP)
+        self.entry_additional_money.pack(side=tk.TOP)
 
     def get_dialog_fields(self):
         actions = []
 
-        can_add = self.entry_can_add_money.get()
-        if can_add > 0:
-            actions.append(f'+{can_add}u - Put your money')
+        additional_money = self.entry_additional_money.get()
+        if additional_money > 0:
+            post('production', {'income': additional_money})
+            actions.append(f'+{additional_money}u - Put your money')
 
-        actions.append(f'+{self.loss - can_add}u - Take credit')
+        if self.loss > additional_money:
+            actions.append(f'+{self.loss - additional_money}u - Take credit')
+
         return actions

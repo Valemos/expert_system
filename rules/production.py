@@ -2,7 +2,7 @@ from durable.lang import *
 
 from object_types.part_rate import PartRate
 from . import production_config
-from .shared import get_machines_for_part, get_next_machine_id, get_storage, get_decisions
+from .shared import get_storage, get_decisions
 
 
 def init_account():
@@ -29,6 +29,8 @@ with ruleset('production'):
                     machine_info = fact
                     break
 
+        print(f'remove machine {machine_info}')
+
         if machine_info is not None:
             produced_part_name = machine_info['part_rate']['name']
             get_storage().take(machine_info['part_rate'])
@@ -39,7 +41,7 @@ with ruleset('production'):
             cost = production_config.machine_brands_dict[machine_info['brand']]['cost']
 
             get_decisions().compensate_loss(cost)
-            get_decisions().production_stopped(machine_info['part_rate'])
+            get_decisions().deficiency(PartRate.from_json(machine_info['part_rate']))
 
     @when_all(+m.part_rate & (m.type == 'part_request'))
     def part_request(c):
@@ -48,32 +50,12 @@ with ruleset('production'):
         get_storage().take(c.m.part_rate)
 
         if in_storage_amount < c.m.part_rate.amount:
-            additional_amount = in_storage_amount - c.m.part_rate.amount
-            additional_rate = PartRate(c.m.part_rate.name, additional_amount).to_json()
+            additional_amount = c.m.part_rate.amount - in_storage_amount
+            additional_rate = PartRate(c.m.part_rate.name, additional_amount)
             get_decisions().deficiency(additional_rate)
-
 
     @when_all(+m.part_rate & (m.type == 'buy'))
     def buy_part(c):
         parts_cost = production_config.market_prices[c.m.part_rate.name] * c.m.part_rate.amount
-        if parts_cost > c.s.balance:
-            raise ValueError(f'cannot buy {c.m.part_rate}')
-
         get_storage().add(c.m.part_rate)
         post('production', {'loss': parts_cost})
-
-    @when_all(+m.part_rate & (m.type == 'setup_produce'))
-    def add_component_production(c):
-        components = production_config.blueprints[c.m.part_rate.name]
-        components = {name: (amount * c.m.part_rate.amount) for name, amount in components.items()}
-
-        for name, amount in components.items():
-            post('production', {'type': 'part_request', 'part_rate': PartRate(name, amount).to_json()})
-
-        machine = get_machines_for_part(c.m.part_rate.name)[0]
-
-        assert_fact('machine', {
-            'identifier': get_next_machine_id(),
-            'brand': machine['brand'],
-            'part_rate': PartRate(c.m.part_rate.name, c.m.part_rate.amount).to_json(),
-        })

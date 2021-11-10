@@ -10,6 +10,7 @@ from json_annotated.raw_json import RawJson
 
 import rules
 from gui.dialog_decide_loss import DialogDecideLoss
+from gui.dialog_deficiency import DialogDeficiency
 from object_types.decision_type import DecisionType
 from rules.shared import get_decisions
 from object_types.assigned_machine import AssignedMachine
@@ -64,11 +65,19 @@ class CarAssemblyAdvisorApp(tk.Frame):
 
     def handle_conclude(self):
         for decision, obj in get_decisions().get_remaining_decisions():
-            if decision == DecisionType.LOSS:
-                self.add_action(DialogDecideLoss(tk.Toplevel(self.root), obj).get_results())
+            if DecisionType.LOSS == decision:
+                self.add_action(f'Deal with loss: {obj}')
+                self.add_actions(DialogDecideLoss(tk.Toplevel(self), obj).get_results())
+            elif DecisionType.DEFICIENCY == decision:
+                self.add_action(f'Deal with deficiency: {str(obj)}')
+                self.add_action(DialogDeficiency(tk.Toplevel(self), obj).get_results())
 
         if not get_decisions().is_empty():
             self.handle_conclude()
+
+    def add_actions(self, actions):
+        for action in actions:
+            self.add_action(action)
 
     def add_action(self, action: Optional[object]):
         if action is not None:
@@ -78,10 +87,7 @@ class CarAssemblyAdvisorApp(tk.Frame):
         messagebox.showinfo('Advice', '\n'.join(action for action in self.actions))
 
     def handle_show_status(self):
-        machines = self._get_installed_machines()
-
-        machine_description = '\n'.join(str(m) for m in machines)
-
+        machine_description = '\n'.join(str(m) for m in self._get_installed_machines())
         storage_description = '\n'.join(str(part_rate) for part_rate in rules.get_storage().iter_part_rates)
 
         messagebox.showinfo("Status",
@@ -92,6 +98,8 @@ class CarAssemblyAdvisorApp(tk.Frame):
     def handle_install_machine(self):
         dialog = DialogInstallMachine(tk.Toplevel(self), rules.production_config.machine_brands)
         machine = dialog.get_results()
+        if machine is None: return
+
         machine.identifier = rules.get_next_machine_id()
         assert_fact('machine', machine.to_json())
 

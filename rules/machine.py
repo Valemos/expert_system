@@ -22,7 +22,15 @@ with ruleset('machine'):
         if blueprint is None:
             raise ValueError('no blueprint for produced object')
 
+        post('production', {'loss': production_config.machine_brands_dict[c.m.brand]['cost']})
         get_storage().add(c.m.part_rate)
+        
+        components = production_config.blueprints[c.m.part_rate.name]
+        components = {name: (amount * c.m.part_rate.amount) for name, amount in components.items()}
+
+        for name, amount in components.items():
+            post('production', {'type': 'part_request', 'part_rate': PartRate(name, amount).to_json()})
+
 
     @when_all(+m.can_produce & +m.brand)
     def add_can_produce(c):

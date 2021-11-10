@@ -43,7 +43,5 @@ class DialogInstallMachine(ADialog):
             )
         )
 
-    def get_results(self) -> AssignedMachine:
-        return super().get_results()
-
-
+    def get_not_submitted_result(self):
+        return None

@@ -30,7 +30,7 @@ class PartStorage:
 
     @property
     def iter_part_rates(self) -> Iterator[PartRate]:
-        return (PartRate(part, amount) for part, amount in self._parts)
+        return (PartRate(part, amount) for part, amount in self._parts.items())
 
     @part_rate_conversion
     def add(self, part_rate: PartRate):
